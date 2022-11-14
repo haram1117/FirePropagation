@@ -1,2 +1,2 @@
 # FirePropagation
-Combustion Simulation For Buldings: PearlAbyss X KHUSW Project
+Combustion Simulation For Buildings: PearlAbyss X KHUSW Project
