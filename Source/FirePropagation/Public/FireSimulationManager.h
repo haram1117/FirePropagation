@@ -10,9 +10,9 @@
 UENUM(BlueprintType)
 enum class EHeatTransferVolumeAmount : uint8
 {
-	High,
-	Low,
-	Custom
+	High = 5,
+	Low = 10,
+	Custom = 0
 };
 
 UCLASS()
@@ -31,6 +31,7 @@ protected:
 	TSubclassOf<AHeatTransferVolume> Volume;
 	UPROPERTY(EditAnywhere)
 	UStaticMesh* BuildingMesh;
+	virtual void OnConstruction(const FTransform& Transform) override;
 
 
 	UPROPERTY(EditAnywhere, Category = "HeatTransferVolumeSettings")
@@ -38,6 +39,7 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category = "HeatTransferVolumeSettings", meta = (EditCondition = "VolumeAmount == EHeatTransferVolumeAmount::Custom"))
 	int VolumeNumber;
+	int VolumeRatio;
 
 	TArray<AHeatTransferVolume*> HeatTransferVolumes;
 	
@@ -45,8 +47,9 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-	static FVector GetStaticMeshSize(UStaticMesh* Mesh);
+	static void GetStaticMeshSize(UStaticMesh* Mesh, FVector& Size);
 	void SpawnVolumes(FVector size);
+	void SetNeighborVolumes();
 
 };
 
