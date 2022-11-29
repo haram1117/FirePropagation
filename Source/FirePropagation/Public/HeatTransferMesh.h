@@ -48,20 +48,27 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-	virtual void OnConstruction(const FTransform& Transform) override;
 	
 	UPROPERTY(VisibleAnywhere)
 	UInstancedStaticMeshComponent* Mesh;
+	UPROPERTY(EditAnywhere)
+	UStaticMeshComponent* MeshComponent;
 	UStaticMesh* StaticMesh;
 	FMeshDescription* MeshDescription;
 	TArray<FVector> MeshVertices;
 	TArray<FColor> RandomColorArray;
+	TArray<FColor> ColorArray;
 
+	TArray<FVertexID> nowVertices;
+	TArray<FVertexID> nextVertices;
+
+	// FStaticMeshComponentLODInfo* LODInfo;
 	FStaticMeshComponentLODInfo* LODInfo;
 
 	TArray<VertexInfo> MeshVertices_info;
 	
-	void GetTriangle(FVertexID id);
+	void ColorVertexInstances(FVertexID id);
+	TArray<FVertexID> FindAdjacentVertices(FVertexID id);
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

@@ -122,9 +122,12 @@ void AFireSimulationManager::SpawnVolumes(FVector size)
 
 void AFireSimulationManager::SetNeighborVolumes()
 {
-	for(int i = 0; i < HeatTransferVolumes.Num(); i++)
+
+	int index = 0;
+	//front wall set neighbors
+	for(int i = index; i < VolumeRatio; i++,index++)
 	{
-		
+		// for(int j = )
 	}
 	
 	// if(j != 0) // 한 line의 가장 첫 block이 아닐 때
