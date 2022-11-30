@@ -7,52 +7,6 @@
 #include "Engine/StaticMesh.h"
 #include "StaticMeshDescription.h"
 
-// // Sets default values
-// AVertexColorSpreadMesh::AVertexColorSpreadMesh()
-// {
-//  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-// 	PrimaryActorTick.bStartWithTickEnabled = true;
-// 	PrimaryActorTick.bCanEverTick = true;
-//
-// 	ColorSpreadComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ColorSpreadMesh"));
-// 	RootComponent = ColorSpreadComponent;
-// 	
-// }
-//
-// // Called every frame
-// void AVertexColorSpreadMesh::Tick(float DeltaTime)
-// {
-// 	Super::Tick(DeltaTime);
-// 	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::Printf(TEXT("Verts %d: "), ColorSpreadComponent->GetStaticMesh()->GetNumVertices(0)));
-//
-// 	ColorSpreadComponent->SetLODDataCount(1, ColorSpreadComponent->LODData.Num());
-//
-// 	FStaticMeshComponentLODInfo* InstanceMeshLODInfo = &ColorSpreadComponent->LODData[0];
-//
-// 	InstanceMeshLODInfo->PaintedVertices.Empty();
-//
-// 	InstanceMeshLODInfo->OverrideVertexColors = new FColorVertexBuffer;
-//
-// 	FStaticMeshLODResources& LODModel = ColorSpreadComponent->GetStaticMesh()->RenderData->LODResources[0];
-//
-// 	if ((int32)LODModel.VertexBuffers.ColorVertexBuffer.GetNumVertices() >= LODModel.GetNumVertices())
-// 	{
-// 		InstanceMeshLODInfo->OverrideVertexColors->InitFromColorArray(&LODModel.VertexBuffers.ColorVertexBuffer.VertexColor(0), LODModel.GetNumVertices());
-// 	}
-// 	else
-// 	{
-// 		InstanceMeshLODInfo->OverrideVertexColors->InitFromSingleColor(FColor::Green, LODModel.GetNumVertices());
-// 	}
-//
-// 	BeginInitResource(InstanceMeshLODInfo->OverrideVertexColors);
-// 	ColorSpreadComponent->MarkRenderStateDirty();
-//
-// 	for (uint32 i = 0; i < InstanceMeshLODInfo->OverrideVertexColors->GetNumVertices(); i++)
-// 	{
-// 		InstanceMeshLODInfo->OverrideVertexColors->VertexColor(i) = FColor::Green;
-// 	}
-// }
-//
 AVertexColorSpreadMesh::AVertexColorSpreadMesh()
 {
 	PrimaryActorTick.bStartWithTickEnabled = true;
@@ -109,9 +63,39 @@ void AVertexColorSpreadMesh::Spread()
 
 	FStaticMeshLODResources& LODModel = ColorSpreadComponent->GetStaticMesh()->RenderData->LODResources[0];
 	FStaticMeshComponentLODInfo* InstanceMeshLODInfo = &ColorSpreadComponent->LODData[0];
-
+	
+	// 얘넨 아마 다른 시간대로 돌아가야댈듯
+	// for(int i = 0; i < OrangeLevelIndices.Num(); i++)
+	// {
+	// }
+	while(OrangeLevelIndices.Num() > 0)
+	{
+		int32 index = OrangeLevelIndices.Pop();
+		// const FColor tempvertexColor = InstanceMeshLODInfo->OverrideVertexColors->VertexColor(index);
+		// const FString tempColorString = GetNextColor(tempvertexColor);
+		PaintVertexInstances(FVertexID(index), *InstanceMeshLODInfo, FColor::Red.ToString());
+		AlreadyCheckedIndices.AddUnique(index);
+	}
+	while(YellowLevelIndices.Num() > 0)
+	{
+		int32 index = YellowLevelIndices.Pop();
+		// const FColor tempvertexColor = InstanceMeshLODInfo->OverrideVertexColors->VertexColor(index);
+		// const FString tempColorString = GetNextColor(tempvertexColor);
+		PaintVertexInstances(FVertexID(index), *InstanceMeshLODInfo, FColor::Orange.ToString());
+		OrangeLevelIndices.AddUnique(index);
+	}
+	while(GreenLevelIndices.Num() > 0)
+	{
+		int32 index = GreenLevelIndices.Pop();
+		// const FColor tempvertexColor = InstanceMeshLODInfo->OverrideVertexColors->VertexColor(index);
+		// const FString tempColorString = GetNextColor(tempvertexColor);
+		PaintVertexInstances(FVertexID(index), *InstanceMeshLODInfo, FColor::Yellow.ToString());
+		YellowLevelIndices.AddUnique(index);
+	}
 	// BuildAdjacencyCache(LODModel);
 	
+	// BeginInitResource(InstanceMeshLODInfo->OverrideVertexColors);
+	// ColorSpreadComponent->MarkRenderStateDirty();
 	// Start our spread code
 	bool check_finished = SpreadIntenseColors(InstanceMeshLODInfo, LODModel);
 
@@ -135,18 +119,37 @@ bool AVertexColorSpreadMesh::SpreadIntenseColors(FStaticMeshComponentLODInfo* In
 	
 	for(int i = 0; i < ProcessingVertices.Num(); i++)
 	{
-		UE_LOG(LogTemp, Log, TEXT("출발~: %d"), ProcessingVertices[i]);
-		PaintVertexInstances(FVertexID(ProcessingVertices[i]), *InstanceMeshLODInfo, "R=255,G=0,B=0,A=255");
+		const FColor vertexColor = InstanceMeshLODInfo->OverrideVertexColors->VertexColor(ProcessingVertices[i]);
+		const FString ColorString = GetNextColor(vertexColor);
+		PaintVertexInstances(FVertexID(ProcessingVertices[i]), *InstanceMeshLODInfo, ColorString);
 		TArray<FVertexID> adjacentVertices = MeshDescription->GetVertexAdjacentVertices(FVertexID(ProcessingVertices[i]));
 
 		for(auto elem : adjacentVertices)
 		{
 			if(!AlreadyCheckedIndices.Contains(elem.GetValue()))
 			{
-				UE_LOG(LogTemp, Log, TEXT("id: %d, color: %s"), elem.GetValue(), *InstanceMeshLODInfo->OverrideVertexColors->VertexColor(elem.GetValue()).ToString())
 				newVertices.AddUnique(elem.GetValue());
-				PaintVertexInstances(elem, *InstanceMeshLODInfo, "R=255,G=0,B=0,A=255");
-				AlreadyCheckedIndices.AddUnique(elem.GetValue());
+				const FColor tempvertexColor = InstanceMeshLODInfo->OverrideVertexColors->VertexColor(elem.GetValue());
+				
+				if(tempvertexColor == FColor::Blue)
+					GreenLevelIndices.AddUnique(elem.GetValue());
+				else if(tempvertexColor == FColor::Green)
+				{
+					GreenLevelIndices.Remove(elem.GetValue());
+					YellowLevelIndices.AddUnique(elem.GetValue());
+				}
+				else if(tempvertexColor == FColor::Yellow)
+				{
+					YellowLevelIndices.Remove(elem.GetValue());
+					OrangeLevelIndices.AddUnique(elem.GetValue());
+				}
+				else if(tempvertexColor == FColor::Orange)
+				{
+					OrangeLevelIndices.Remove(elem.GetValue());
+					AlreadyCheckedIndices.AddUnique(elem.GetValue());
+				}
+				const FString tempColorString = GetNextColor(tempvertexColor);
+				PaintVertexInstances(elem, *InstanceMeshLODInfo, tempColorString);
 			}
 		}
 	}
@@ -155,36 +158,10 @@ bool AVertexColorSpreadMesh::SpreadIntenseColors(FStaticMeshComponentLODInfo* In
 	
 	BeginInitResource(InstanceMeshLODInfo->OverrideVertexColors);
 	ColorSpreadComponent->MarkRenderStateDirty();
-	UE_LOG(LogTemp, Log, TEXT("다음~: %d"), ProcessingVertices.Num());
 	if(ProcessingVertices.Num() != 0)
 		return false;
-	else
-	{
-		return true;
-	}
+	return true;
 }
-
-// TArray<int32> AVertexColorSpreadMesh::FindNearVertices(FVector Position, FStaticMeshLODResources& LODModel, FStaticMeshComponentLODInfo* InstanceMeshLODInfo)
-// {
-// 	TArray<int32> NearVertices;
-// 	auto ShortestDistance = -1;
-// 	auto NearestVertexIndex = -1;
-// 	auto LocalToWorld = ColorSpreadComponent->GetComponentToWorld().ToMatrixWithScale();
-//
-// 	for (auto i = 0; i < LODModel.GetNumVertices(); i++)
-// 	{
-// 		auto LocalVertexPosition = LODModel.VertexBuffers.PositionVertexBuffer.VertexPosition(i);
-// 		auto WorldVertexPosition = LocalToWorld.TransformPosition(LocalVertexPosition);
-// 		auto distance = FVector::DistSquared(WorldVertexPosition, Position);
-//
-// 		if(distance < Distance)
-// 		{
-// 			if(InstanceMeshLODInfo->OverrideVertexColors->VertexColor(i) != FColor::Red)
-// 				NearVertices.Add(i);
-// 		}
-// 	}
-// 	return NearVertices;
-// }
 
 void AVertexColorSpreadMesh::InitialiseLODInfoAndBuffers()
 {
@@ -198,15 +175,9 @@ void AVertexColorSpreadMesh::InitialiseLODInfoAndBuffers()
 	FStaticMeshComponentLODInfo* InstanceMeshLODInfo = &ColorSpreadComponent->LODData[0];
 	
 	InstanceMeshLODInfo->OverrideVertexColors = new FColorVertexBuffer;
-	// if (LODModel.VertexBuffers.ColorVertexBuffer.VertexColor(0))
-	// {
-	// 	UE_LOG(LogTemp, Log, TEXT("있음"))
-	// 	// If the mesh already has vertex colours, initialise OverrideVertexColors from them
-	// 	InstanceMeshLODInfo->OverrideVertexColors->InitFromColorArray(&LODModel.VertexBuffers.ColorVertexBuffer.VertexColor(0), LODModel.GetNumVertices());
-	// }
+	
 	if(FirstInit)
 	{
-		UE_LOG(LogTemp, Log, TEXT("없음"))
 		// If it doesn't, set all overridden vert colours to black
 		InstanceMeshLODInfo->OverrideVertexColors->InitFromSingleColor(FColor::Blue, LODModel.GetNumVertices());
 		FirstInit = false;
@@ -226,4 +197,24 @@ void AVertexColorSpreadMesh::PaintVertexInstances(FVertexID id, FStaticMeshCompo
 		LODInfo.OverrideVertexColors->VertexColor(item.GetValue()).InitFromString(ColorString);
 		// LODInfo.OverrideVertexColors->VertexColor(item.GetValue()) = FColor::Red;
 	}
+}
+
+FString AVertexColorSpreadMesh::GetNextColor(FColor nowColor)
+{
+	
+	FColor nextColor;
+	if(nowColor == FColor::Blue)
+		nextColor = FColor::Green;
+	else if(nowColor == FColor::Green)
+		nextColor = FColor::Yellow;
+	else if(nowColor == FColor::Yellow)
+		nextColor = FColor::Orange;
+	else if(nowColor == FColor::Orange)
+		nextColor = FColor::Red;
+	else
+	{
+		nextColor = FColor::Red;
+	}
+	
+	return nextColor.ToString();
 }

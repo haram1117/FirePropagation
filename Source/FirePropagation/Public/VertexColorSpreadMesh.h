@@ -37,47 +37,19 @@ class FIREPROPAGATION_API AVertexColorSpreadMesh : public AActor
 	*/
 	void InitialiseLODInfoAndBuffers();
 	bool FirstInit;
-	TArray<int32> AlreadyCheckedIndices;
-	void PaintVertexInstances(FVertexID id, FStaticMeshComponentLODInfo& LODInfo, FString ColorString);
-	/**
-	Create a new override vertex color buffer.
-	*/
-	// void InitialiseInstancedOverrideVertexColorBuffer(FStaticMeshComponentLODInfo* InstanceMeshLODInfo, FStaticMeshLODResources& LODModel);
 
+	TArray<int32> GreenLevelIndices;
+	TArray<int32> YellowLevelIndices;
+	TArray<int32> OrangeLevelIndices;
+	TArray<int32> AlreadyCheckedIndices; // red level indices
+	void PaintVertexInstances(FVertexID id, FStaticMeshComponentLODInfo& LODInfo, FString ColorString);
+
+	FString GetNextColor(FColor nowColor);
+	
 	/**
 	Spread intense vertex colors out.
 	*/
 	bool SpreadIntenseColors(FStaticMeshComponentLODInfo* InstanceMeshLODInfo, FStaticMeshLODResources& LODModel);
-
-	/**
-	Spread color from the specified vert.
-	*/
-	// void SpreadColorFromVert(int32 StartVertIndex, FStaticMeshComponentLODInfo* InstanceMeshLODInfo, FStaticMeshLODResources& LODModel);
-
-	/**
-	Get the intensity of the selected channel (see Channel)
-	*/
-	// int32 GetNearestVertIndex(FVector Position, FStaticMeshLODResources& LODModel);
-
-	/**
-	Get the intensity of the selected channel (see Channel)
-	*/
-	// uint8 GetIntensity(FColor Color);
-
-	/**
-	Set the intensity of the selected channel to the given value (see Channel)
-	*/
-	// void SetIntensity(FColor *Color, uint8 Intensity);
-
-	/**
-	Build a list of adjacent vertices (using the adjacency cache)
-	*/
-	// TArray<int32> GetAdjacentVertIndexes(int32 StartVertIndex);
-
-	/**
-	Build an adjacent vertex cache to speed up spreading calculations.
-	*/
-	// void BuildAdjacencyCache(FStaticMeshLODResources& LODModel);
 
 	/**
 	The adjacency cache store.
