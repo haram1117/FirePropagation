@@ -9,6 +9,6 @@ public class FirePropagationTarget : TargetRules
 	{
 		Type = TargetType.Game;
 		DefaultBuildSettings = BuildSettingsVersion.V2;
-		ExtraModuleNames.AddRange( new string[] { "FirePropagation" } );
+		ExtraModuleNames.AddRange( new string[] { "FirePropagation", "CombustionSimulationPlugin" } );
 	}
 }

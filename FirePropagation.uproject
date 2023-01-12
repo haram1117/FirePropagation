@@ -9,7 +9,10 @@
 			"Type": "Runtime",
 			"LoadingPhase": "Default",
 			"AdditionalDependencies": [
-				"Engine"
+				"Engine",
+				"Slate",
+				"SlateCore",
+				"CoreUObject"
 			]
 		}
 	],
@@ -17,6 +20,18 @@
 		{
 			"Name": "Kdtree",
 			"Enabled": true
+		},
+		{
+			"Name": "sdf",
+			"Enabled": false
+		},
+		{
+			"Name": "CombustionSimulationPlugin",
+			"Enabled": false
+		},
+		{
+			"Name": "CombustionSimulationWindow",
+			"Enabled": false
 		}
 	]
 }

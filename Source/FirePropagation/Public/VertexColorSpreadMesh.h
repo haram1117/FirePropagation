@@ -3,6 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "FireComponent.h"
+#include "FireSimulation.h"
+#include "VertexStruct.h"
 #include "GameFramework/Actor.h"
 #include "VertexColorSpreadMesh.generated.h"
 
@@ -38,23 +41,30 @@ class FIREPROPAGATION_API AVertexColorSpreadMesh : public AActor
 	void InitialiseLODInfoAndBuffers();
 	bool FirstInit;
 
-	TArray<int32> GreenLevelIndices;
-	TArray<int32> YellowLevelIndices;
-	TArray<int32> OrangeLevelIndices;
-	TArray<int32> AlreadyCheckedIndices; // red level indices
-	void PaintVertexInstances(FVertexID id, FStaticMeshComponentLODInfo& LODInfo, FString ColorString);
+	TQueue<int32> GreenLevelIndices;
+	TQueue<int32> YellowLevelIndices;
+	TQueue<int32> OrangeLevelIndices;
+	TQueue<int32> AlreadyCheckedIndices; // red level indices
 
-	FString GetNextColor(FColor nowColor);
+	TArray<int32> processedVertexIndices;
+	// TMap<int32, bool> GreenLevelIndices;
+	// TMap<int32, bool> YellowLevelIndices;
+	// TMap<int32, bool> OrangeLevelIndices;
+	// TMap<int32, bool> AlreadyCheckedIndices;
+	void PaintVertexInstances(FVertexID id, FStaticMeshComponentLODInfo& LODInfo, FString ColorString, FVector vertexLocation);
+
+	FColor GetNextColor(FColor nowColor);
 	
 	/**
 	Spread intense vertex colors out.
 	*/
-	bool SpreadIntenseColors(FStaticMeshComponentLODInfo* InstanceMeshLODInfo, FStaticMeshLODResources& LODModel);
+	bool SpreadIntenseColors(FStaticMeshComponentLODInfo& InstanceMeshLODInfo, FStaticMeshLODResources& LODModel);
 
 	/**
 	The adjacency cache store.
 	*/
 	TMultiMap<int32, int32> AdjacencyCache;
+
 
 public:
 	/**
@@ -63,6 +73,13 @@ public:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = ColorSpread)
 	UStaticMeshComponent* ColorSpreadComponent;
 
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+	UFireSimulation* FireSimulationManager;
+	
+	// UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+	// UFireComponent* FireComponent;
+	
 	/**
 	The particle to spawn when vertices reach a certain intensity
 	*/
@@ -110,7 +127,12 @@ public:
 	// UFUNCTION()
 	// void TakePointDamageDelegate(float Damage, AController* InstigatedBy, FVector HitLocation, UPrimitiveComponent* FHitComponent, FName BoneName, FVector ShotFromDirection, const UDamageType* DamageType, AActor* DamageCauser);
 
-	TArray<int32> ProcessingVertices;
+	TSet<FVertexID> ProcessingVertices;
+	TSet<FVertexID> NextProcessingVertices;
+	TSet<FVertexID> StartedVertices;
+
+	TMap<int, VertexStruct> startedVerticesMap;
+	
 	// TArray<int32> FindNearVertices(FVector Position, FStaticMeshLODResources& LODModel, FStaticMeshComponentLODInfo* InstanceMeshLODInfo);
 	/**
 	Internal setting, whether the timer is current active.
