@@ -42,6 +42,7 @@ void UFireComponent::AddVertexToFireComponent(FVertexID VertexID, FVector newLoc
 bool UFireComponent::CheckInBoundary(FVertexID VertexID, FVector newLocation)
 {
 	float distance = FVector::Distance(centerLocation, newLocation);
+	// UE_LOG(LogTemp, Log, TEXT("Distance: %f"), distance)
 	if(distance <= FireSimulation->boundary)
 	{
 		return true;
@@ -68,6 +69,43 @@ void UFireComponent::FireStart()
 	EmitterInstances[3]->bEnabled = true;
 	EmitterInstances[4]->bEnabled = true;
 	EmitterInstances[5]->bEnabled = true;
+	
+	FTimerHandle Handle;
+	GetWorld()->GetTimerManager().SetTimer(Handle, this, &UFireComponent::FireStop, 3.0f, false);
+
+}
+
+void UFireComponent::FireStop()
+{
+	fireRate -= 0.1f;
+	SetFloatParameter(FName("SpawnScale"), fireRate);
+
+	FTimerHandle Handle;
+	if(fireRate <= 0.0f)
+	{
+		GetWorld()->GetTimerManager().SetTimer(Handle, this, &UFireComponent::SmokeStop, 1.0f, false);
+	}else
+	{
+		GetWorld()->GetTimerManager().SetTimer(Handle, this, &UFireComponent::FireStop, 0.01f, false);
+	}
+}
+
+void UFireComponent::SmokeStop()
+{
+	// EmitterInstances[2]->bEnabled = false;
+	// FTimerHandle Handle;
+	// GetWorld()->GetTimerManager().SetTimer(Handle, this, &UFireComponent::Destroy, 1.0f, false);
+}
+
+void UFireComponent::Destroy()
+{
+	FireSimulation->FireComponents.Remove(this);
+	DestroyComponent(false);
+}
+
+void UFireComponent::DestroyComponent(bool bPromoteChildren)
+{
+	Super::DestroyComponent(bPromoteChildren);
 }
 
 

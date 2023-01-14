@@ -20,6 +20,9 @@ public:
 	UFireComponent();
 	UParticleSystem* ParticleSystem;
 
+	float fireRate = 1.0f;
+	float smokeRate = 5.0f;
+
 	TArray<FVertexID> VertexIds;
 	FVector centerLocation;
 	UFireSimulation* FireSimulation;
@@ -29,6 +32,10 @@ public:
 	void SetFireSimulation(UFireSimulation* __fireSim);
 	void SmokeStart();
 	void FireStart();
+	void FireStop();
+	void SmokeStop();
+	void Destroy();
+	virtual void DestroyComponent(bool bPromoteChildren) override;
 	
 protected:
 

@@ -18,6 +18,7 @@ UFireSimulation::UFireSimulation()
 
 void UFireSimulation::SpawnSmoke(FVector fireLocation, FVertexID VertexID)
 {
+	UE_LOG(LogTemp, Log, TEXT("FireComponents 개수: %d"), FireComponents.Num());
 	if(FireComponents.Num() == 0)
 	{
 		int num1 = FireComponents.Num() + 1;

@@ -47,11 +47,12 @@ class FIREPROPAGATION_API AVertexColorSpreadMesh : public AActor
 	TQueue<int32> AlreadyCheckedIndices; // red level indices
 
 	TArray<int32> processedVertexIndices;
+
 	// TMap<int32, bool> GreenLevelIndices;
 	// TMap<int32, bool> YellowLevelIndices;
 	// TMap<int32, bool> OrangeLevelIndices;
 	// TMap<int32, bool> AlreadyCheckedIndices;
-	void PaintVertexInstances(FVertexID id, FStaticMeshComponentLODInfo& LODInfo, FString ColorString, FVector vertexLocation);
+	void PaintVertexInstances(FVertexID id, FStaticMeshComponentLODInfo& LODInfo, FString ColorString, FVector& vertexLocation);
 
 	FColor GetNextColor(FColor nowColor);
 	

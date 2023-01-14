@@ -24,6 +24,7 @@ public:
 
 	void FindNearestFire(FVector fireLocation, FVertexID VertexID);
 	
+	
 
 	UPROPERTY(EditAnywhere)
 	float boundary = 50;
