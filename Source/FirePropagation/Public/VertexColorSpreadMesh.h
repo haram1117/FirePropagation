@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "FireComponent.h"
 #include "FireSimulation.h"
+#include "MeshDescription.h"
 #include "VertexStruct.h"
 #include "GameFramework/Actor.h"
 #include "VertexColorSpreadMesh.generated.h"
@@ -40,6 +41,7 @@ class FIREPROPAGATION_API AVertexColorSpreadMesh : public AActor
 	*/
 	void InitialiseLODInfoAndBuffers();
 	bool FirstInit;
+	bool SaveText(FString SaveDirectory, FString FileName, FStaticMeshLODResources& LODModel, FStaticMeshComponentLODInfo& LODInfo, int vertexNum);
 
 	TQueue<int32> GreenLevelIndices;
 	TQueue<int32> YellowLevelIndices;
@@ -47,6 +49,8 @@ class FIREPROPAGATION_API AVertexColorSpreadMesh : public AActor
 	TQueue<int32> AlreadyCheckedIndices; // red level indices
 
 	TArray<int32> processedVertexIndices;
+
+	TVertexAttributesConstRef<FVector> VertexPositions;
 
 	// TMap<int32, bool> GreenLevelIndices;
 	// TMap<int32, bool> YellowLevelIndices;

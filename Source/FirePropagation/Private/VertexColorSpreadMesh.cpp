@@ -7,6 +7,7 @@
 #include "Engine/StaticMesh.h"
 #include "StaticMeshDescription.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Rendering/SkeletalMeshLODModel.h"
 
 AVertexColorSpreadMesh::AVertexColorSpreadMesh()
 {
@@ -45,14 +46,24 @@ void AVertexColorSpreadMesh::Tick(float DeltaTime)
 void AVertexColorSpreadMesh::BeginPlay()
 {
 	Super::BeginPlay();
-	ProcessingVertices.Add(FVertexID(0));
+	ProcessingVertices.Add(FVertexID(33131));
 	MeshDescription = ColorSpreadComponent->GetStaticMesh()->GetMeshDescription(0);
 	// Init the buffers and LOD data
 	InitialiseLODInfoAndBuffers();
 	
+	VertexPositions = MeshDescription->VertexAttributes().GetAttributesRef<FVector>( MeshAttribute::Vertex::Position );
+
+	// ColorSpreadComponent->GetStaticMesh()->Build();
+	// MeshDescription = ColorSpreadComponent->GetStaticMesh()->GetSourceModel(0).CreateMeshDescription();
+	// FStaticMeshLODResources& LODModel = ColorSpreadComponent->GetStaticMesh()->RenderData->LODResources[0];
+	
+	// FStaticMeshComponentLODInfo* InstanceMeshLODInfo = ColorSpreadComponent->LODData.GetData();
+	// int vertexNum = LODModel.GetNumVertices();
+	
+	// SaveText(FPaths::GameSourceDir(), FString(TEXT("VertexPosition4")), LODModel, *InstanceMeshLODInfo, vertexNum);
+	
 	FTimerHandle Handle;
 	GetWorldTimerManager().SetTimer(Handle, this, &AVertexColorSpreadMesh::Spread, Interval, false);
-		
 }
 
 void AVertexColorSpreadMesh::Spread()
@@ -65,6 +76,7 @@ void AVertexColorSpreadMesh::Spread()
 
 	FStaticMeshLODResources& LODModel = ColorSpreadComponent->GetStaticMesh()->RenderData->LODResources[0];
 	FStaticMeshComponentLODInfo* InstanceMeshLODInfo = &ColorSpreadComponent->LODData[0];
+
 	
 	BeginUpdateResourceRHI(InstanceMeshLODInfo->OverrideVertexColors);
 	bool check_finished = SpreadIntenseColors(*InstanceMeshLODInfo, LODModel);
@@ -101,7 +113,8 @@ bool AVertexColorSpreadMesh::SpreadIntenseColors(FStaticMeshComponentLODInfo& In
 		FColor ColorString = GetNextColor(vertexColor);
 		VertexStruct->SetVertexColor(ColorString);
 		
-		FVector vertexLocation = LODModel.VertexBuffers.PositionVertexBuffer.VertexPosition(ProcessingVertex.GetValue());
+		// FVector vertexLocation = LODModel.VertexBuffers.PositionVertexBuffer.VertexPosition(ProcessingVertex.GetValue());
+		FVector vertexLocation = VertexPositions.Get(ProcessingVertex);
 		PaintVertexInstances(ProcessingVertex, InstanceMeshLODInfo, ColorString.ToString(), vertexLocation);
 		//
 		// UE_LOG(LogTemp, Log, TEXT("????: %d"), FVertexID(ProcessingVertex).GetValue());
@@ -125,7 +138,8 @@ bool AVertexColorSpreadMesh::SpreadIntenseColors(FStaticMeshComponentLODInfo& In
 		FColor ColorString = GetNextColor(vertexColor);
 		VertexStruct->SetVertexColor(ColorString);
 
-		FVector vertexLocation = LODModel.VertexBuffers.PositionVertexBuffer.VertexPosition(elem.GetValue());
+		// FVector vertexLocation = LODModel.VertexBuffers.PositionVertexBuffer.VertexPosition(elem.GetValue());
+		FVector vertexLocation = VertexPositions.Get(elem);
 		PaintVertexInstances(elem, InstanceMeshLODInfo, ColorString.ToString(), vertexLocation);
 	}
 	ProcessingVertices.Empty();
@@ -162,10 +176,30 @@ void AVertexColorSpreadMesh::InitialiseLODInfoAndBuffers()
 	ColorSpreadComponent->MarkRenderStateDirty();
 }
 
+bool AVertexColorSpreadMesh::SaveText(FString SaveDirectory, FString FileName, FStaticMeshLODResources& LODModel, FStaticMeshComponentLODInfo& LODInfo, int vertexNum)
+{
+	SaveDirectory += "\\";
+	SaveDirectory += FileName;
+
+	
+	// FIndexArrayView Indices = LODModel.IndexBuffer.GetArrayView();
+	FString FinalString = "";
+
+	for( const FVertexID VertexID : MeshDescription->Vertices().GetElementIDs() )
+	{
+		const FVector Position = VertexPositions.Get( VertexID );
+		
+		FinalString += FString::Printf(TEXT("id: %d"), VertexID.GetValue());
+		FinalString += FString::Printf(TEXT(", position: %s"), *Position.ToString());
+		FinalString += LINE_TERMINATOR;
+	}
+	
+	return FFileHelper::SaveStringToFile(FinalString, *SaveDirectory);
+}
+
 void AVertexColorSpreadMesh::PaintVertexInstances(FVertexID id, FStaticMeshComponentLODInfo& LODInfo, FString ColorString, FVector& vertexLocation)
 {
 	// BeginInitResource(LODInfo.OverrideVertexColors);
-	
 	for(auto& item: MeshDescription->GetVertexVertexInstances(id))
 	{
 		LODInfo.OverrideVertexColors->VertexColor(item.GetValue()).InitFromString(ColorString);

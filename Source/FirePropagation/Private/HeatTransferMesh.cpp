@@ -26,7 +26,7 @@ void AHeatTransferMesh::BeginPlay()
 	MeshComponent->SetLODDataCount(1, MeshComponent->LODData.Num());
 	LODInfo = &MeshComponent->LODData[0];
 
-	LODInfo->PaintedVertices.Empty();
+	// LODInfo->PaintedVertices.Empty();
 	LODInfo->OverrideVertexColors = new FColorVertexBuffer();
 
 	FStaticMeshLODResources& LODResources = StaticMesh->RenderData->LODResources[0];
