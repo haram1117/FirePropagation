@@ -21,8 +21,20 @@ private:
 	int VertexID;
 	FVector vertexLocation;
 	FColor VertexColor;
+	int fireID = 0;
 
 public:
+
+	void SetVertexID(int _id)
+	{
+		VertexID = _id;
+	}
+
+	int GetVertexID() const
+	{
+		return VertexID;
+	}
+	
 	void SetVertexColor(FColor color)
 	{
 		VertexColor = color;
@@ -31,6 +43,16 @@ public:
 	FColor GetVertexColor() const
 	{
 		return VertexColor;
+	}
+
+	void setFireID(int id)
+	{
+		fireID = id;
+	}
+
+	int getFireID() const
+	{
+		return fireID;
 	}
 	
 };

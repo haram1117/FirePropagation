@@ -7,6 +7,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Math/Vector.h"
 #include "Particles/ParticleEmitter.h"
+#include "FireSimulation.h"
 #include "Particles/ParticleLODLevel.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Particles/Orbit/ParticleModuleOrbit.h"
@@ -21,28 +22,26 @@ UFireComponent::UFireComponent()
 		SetTemplate(ParticleAsset.Object);
 		ParticleSystem = ParticleAsset.Object;	
 	}
+	Modules = ParticleSystem->Emitters[0]->ModulesNeedingInstanceData;
 }
 
 
 void UFireComponent::AddVertexToFireComponent(FVertexID VertexID, FVector newLocation)
 {
 	VertexIds.Add(VertexID);
-	int num = VertexIds.Num(); 
-	if(num != 1)
-	{
-		centerLocation = centerLocation * (num / (num + 1)) + newLocation / (num + 1);
-		// UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ParticleSystem, newLocation);
-	}
-	else
-	{
-		// centerLocation = newLocation;
-	}
+	FVector deltaPos = position - newLocation;
 }
 
+/**
+ * @brief 해당 vertex가 fire Boundary 범위 안에 속해있는지 여부
+ * @param VertexID 처리중인 vertexID (아마 빼도 될지도)
+ * @param newLocation 처리중인 vertex의 position
+ * @return true: fire boundary 안에 속해있음 (fire 크기 변경 필요)
+ */
 bool UFireComponent::CheckInBoundary(FVertexID VertexID, FVector newLocation)
 {
-	float distance = FVector::Distance(centerLocation, newLocation);
-	// UE_LOG(LogTemp, Log, TEXT("Distance: %f"), distance)
+	float distance = FVector::Distance(position, newLocation);
+	// UE_LOG(LogTemp, Log, TEXT("FVertexID: %s, newLocation: %s, Distance: %f"), *VertexID.ToString(), *newLocation.ToString(), distance);
 	if(distance <= FireSimulation->boundary)
 	{
 		return true;
@@ -70,8 +69,8 @@ void UFireComponent::FireStart()
 	EmitterInstances[4]->bEnabled = true;
 	EmitterInstances[5]->bEnabled = true;
 	
-	FTimerHandle Handle;
-	GetWorld()->GetTimerManager().SetTimer(Handle, this, &UFireComponent::FireStop, 3.0f, false);
+	// FTimerHandle Handle;
+	// GetWorld()->GetTimerManager().SetTimer(Handle, this, &UFireComponent::FireStop, 6.0f, false);
 
 }
 
@@ -92,14 +91,14 @@ void UFireComponent::FireStop()
 
 void UFireComponent::SmokeStop()
 {
-	// EmitterInstances[2]->bEnabled = false;
-	// FTimerHandle Handle;
-	// GetWorld()->GetTimerManager().SetTimer(Handle, this, &UFireComponent::Destroy, 1.0f, false);
+	EmitterInstances[2]->bEnabled = false;
+	FTimerHandle Handle;
+	GetWorld()->GetTimerManager().SetTimer(Handle, this, &UFireComponent::Destroy, 1.0f, false);
 }
 
 void UFireComponent::Destroy()
 {
-	FireSimulation->FireComponents.Remove(this);
+	FireSimulation->FireComponents.Remove(id);
 	DestroyComponent(false);
 }
 

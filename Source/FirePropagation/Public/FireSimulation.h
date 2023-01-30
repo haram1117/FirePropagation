@@ -3,10 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "VertexStruct.h"
 #include "Components/ActorComponent.h"
 #include "FireSimulation.generated.h"
 
 class UFireComponent;
+class AVertexColorSpreadMesh;
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class FIREPROPAGATION_API UFireSimulation : public USceneComponent
 {
@@ -16,13 +18,16 @@ public:
 	// Sets default values for this component's properties
 	UFireSimulation();
 	
-	UPROPERTY(VisibleAnywhere)
-	TArray<UFireComponent*> FireComponents;
 	
-	UFUNCTION(BlueprintCallable)
-	void SpawnSmoke(FVector fireLocation, FVertexID VertexID);
+	// TArray<UFireComponent*> FireComponents;
+	// UPROPERTY(VisibleAnywhere)
+	TMap<int, UFireComponent*> FireComponents;
 
-	void FindNearestFire(FVector fireLocation, FVertexID VertexID);
+	AVertexColorSpreadMesh* vertexColorSpreadMesh;
+	
+	void SpawnSmoke(FVector fireLocation, VertexStruct* VertexStruct);
+
+	void FindNearestFire(FVector fireLocation, VertexStruct* vertexStruct);
 	
 	
 

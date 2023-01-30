@@ -20,12 +20,13 @@ AVertexColorSpreadMesh::AVertexColorSpreadMesh()
 	// FireComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepWorldTransform);
 	
 	FireSimulationManager = CreateDefaultSubobject<UFireSimulation>(TEXT("FireSimulationManager"));
+	FireSimulationManager->vertexColorSpreadMesh = this;
 	// FireComponent->AddToRoot();
 	// FScriptDelegate Delegate;
 	// Delegate.BindUFunction(this, TEXT("TakePointDamageDelegate"));
 	// OnTakePointDamage.AddUnique(Delegate);
 	FirstInit = true;
-	Distance = 50.f;
+	Distance = 10.f;
 	TriggerIntensity = .2f;
 	Interval = 1.0f;
 	bActive = true;
@@ -46,12 +47,16 @@ void AVertexColorSpreadMesh::Tick(float DeltaTime)
 void AVertexColorSpreadMesh::BeginPlay()
 {
 	Super::BeginPlay();
-	ProcessingVertices.Add(FVertexID(33131));
+	ProcessingVertices.Add(FVertexID(0));
 	MeshDescription = ColorSpreadComponent->GetStaticMesh()->GetMeshDescription(0);
 	// Init the buffers and LOD data
 	InitialiseLODInfoAndBuffers();
 	
 	VertexPositions = MeshDescription->VertexAttributes().GetAttributesRef<FVector>( MeshAttribute::Vertex::Position );
+
+	// Normals = MeshDescription->VertexAttributes().GetAttributesRef<FVector>( MeshAttribute::VertexInstance::Normal );
+	// Normals = MeshDescription->VertexInstanceAttributes().GetAttributesRef<FVector>(MeshAttribute::VertexInstance::Normal);
+
 
 	// ColorSpreadComponent->GetStaticMesh()->Build();
 	// MeshDescription = ColorSpreadComponent->GetStaticMesh()->GetSourceModel(0).CreateMeshDescription();
@@ -112,10 +117,11 @@ bool AVertexColorSpreadMesh::SpreadIntenseColors(FStaticMeshComponentLODInfo& In
 		FColor vertexColor = VertexStruct->GetVertexColor();
 		FColor ColorString = GetNextColor(vertexColor);
 		VertexStruct->SetVertexColor(ColorString);
+		VertexStruct->SetVertexID(ProcessingVertex.GetValue());
 		
 		// FVector vertexLocation = LODModel.VertexBuffers.PositionVertexBuffer.VertexPosition(ProcessingVertex.GetValue());
 		FVector vertexLocation = VertexPositions.Get(ProcessingVertex);
-		PaintVertexInstances(ProcessingVertex, InstanceMeshLODInfo, ColorString.ToString(), vertexLocation);
+		PaintVertexInstances(VertexStruct, InstanceMeshLODInfo, ColorString.ToString(), vertexLocation);
 		//
 		// UE_LOG(LogTemp, Log, TEXT("????: %d"), FVertexID(ProcessingVertex).GetValue());
 		TSet<FVertexID> AdjacentSet = TSet<FVertexID>(MeshDescription->GetVertexAdjacentVertices(FVertexID(ProcessingVertex)));
@@ -137,10 +143,11 @@ bool AVertexColorSpreadMesh::SpreadIntenseColors(FStaticMeshComponentLODInfo& In
 		FColor vertexColor = VertexStruct->GetVertexColor();
 		FColor ColorString = GetNextColor(vertexColor);
 		VertexStruct->SetVertexColor(ColorString);
+		VertexStruct->SetVertexID(elem.GetValue());
 
 		// FVector vertexLocation = LODModel.VertexBuffers.PositionVertexBuffer.VertexPosition(elem.GetValue());
 		FVector vertexLocation = VertexPositions.Get(elem);
-		PaintVertexInstances(elem, InstanceMeshLODInfo, ColorString.ToString(), vertexLocation);
+		PaintVertexInstances(VertexStruct, InstanceMeshLODInfo, ColorString.ToString(), vertexLocation);
 	}
 	ProcessingVertices.Empty();
 	ProcessingVertices = NextProcessingVertices;
@@ -172,7 +179,7 @@ void AVertexColorSpreadMesh::InitialiseLODInfoAndBuffers()
 	{
 		InstanceMeshLODInfo->OverrideVertexColors->InitFromColorArray(&LODModel.VertexBuffers.ColorVertexBuffer.VertexColor(0), LODModel.GetNumVertices());
 	}
-
+	
 	ColorSpreadComponent->MarkRenderStateDirty();
 }
 
@@ -197,10 +204,10 @@ bool AVertexColorSpreadMesh::SaveText(FString SaveDirectory, FString FileName, F
 	return FFileHelper::SaveStringToFile(FinalString, *SaveDirectory);
 }
 
-void AVertexColorSpreadMesh::PaintVertexInstances(FVertexID id, FStaticMeshComponentLODInfo& LODInfo, FString ColorString, FVector& vertexLocation)
+void AVertexColorSpreadMesh::PaintVertexInstances(VertexStruct* vertexStruct, FStaticMeshComponentLODInfo& LODInfo, FString ColorString, FVector& vertexLocation)
 {
 	// BeginInitResource(LODInfo.OverrideVertexColors);
-	for(auto& item: MeshDescription->GetVertexVertexInstances(id))
+	for(auto& item: MeshDescription->GetVertexVertexInstances(FVertexID(vertexStruct->GetVertexID())))
 	{
 		LODInfo.OverrideVertexColors->VertexColor(item.GetValue()).InitFromString(ColorString);
 	}
@@ -208,15 +215,16 @@ void AVertexColorSpreadMesh::PaintVertexInstances(FVertexID id, FStaticMeshCompo
 	{
 		// UE_LOG(LogTemp, Log, TEXT("Before: %s"), *vertexLocation.ToString());
 		vertexLocation = GetActorTransform().TransformPosition(vertexLocation);
+		
 		// UE_LOG(LogTemp, Log, TEXT("After: %s"), *vertexLocation.ToString());
-		FireSimulationManager->SpawnSmoke(vertexLocation, FVertexID(id));
+		FireSimulationManager->SpawnSmoke(vertexLocation, vertexStruct);
 	}
 	if(ColorString == FColor::Red.ToString())
 	{
 		// UE_LOG(LogTemp, Log, TEXT("Before: %s"), *vertexLocation.ToString());
 		vertexLocation = GetActorTransform().TransformPosition(vertexLocation);
 		// UE_LOG(LogTemp, Log, TEXT("After: %s"), *vertexLocation.ToString());
-		FireSimulationManager->FindNearestFire(vertexLocation, FVertexID(id));
+		FireSimulationManager->FindNearestFire(vertexLocation, vertexStruct);
 	}
 }
 

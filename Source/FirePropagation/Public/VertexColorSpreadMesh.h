@@ -4,10 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "FireComponent.h"
-#include "FireSimulation.h"
 #include "MeshDescription.h"
 #include "VertexStruct.h"
 #include "GameFramework/Actor.h"
+#include "FireSimulation.h"
 #include "VertexColorSpreadMesh.generated.h"
 
 UENUM()
@@ -52,11 +52,15 @@ class FIREPROPAGATION_API AVertexColorSpreadMesh : public AActor
 
 	TVertexAttributesConstRef<FVector> VertexPositions;
 
+	// TVertexAttributesConstRef<FVector> Normals;
+
+	TVertexInstanceAttributesConstRef<FVector> Normals;
+	
 	// TMap<int32, bool> GreenLevelIndices;
 	// TMap<int32, bool> YellowLevelIndices;
 	// TMap<int32, bool> OrangeLevelIndices;
 	// TMap<int32, bool> AlreadyCheckedIndices;
-	void PaintVertexInstances(FVertexID id, FStaticMeshComponentLODInfo& LODInfo, FString ColorString, FVector& vertexLocation);
+	void PaintVertexInstances(VertexStruct* vertexStruct, FStaticMeshComponentLODInfo& LODInfo, FString ColorString, FVector& vertexLocation);
 
 	FColor GetNextColor(FColor nowColor);
 	

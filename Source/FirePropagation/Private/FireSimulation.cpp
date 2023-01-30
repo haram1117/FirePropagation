@@ -2,6 +2,7 @@
 
 
 #include "FireSimulation.h"
+#include "VertexColorSpreadMesh.h"
 #include "FireComponent.h"
 #include "ParticleEmitterInstances.h"
 #include "Kismet/GameplayStatics.h"
@@ -16,70 +17,92 @@ UFireSimulation::UFireSimulation()
 	// ...
 }
 
-void UFireSimulation::SpawnSmoke(FVector fireLocation, FVertexID VertexID)
+void UFireSimulation::SpawnSmoke(FVector fireLocation, VertexStruct* VertexStruct)
 {
-	UE_LOG(LogTemp, Log, TEXT("FireComponents 개수: %d"), FireComponents.Num());
+	// UE_LOG(LogTemp, Log, TEXT("FireComponents 개수: %d"), FireComponents.Num());
+	// UE_LOG(LogTemp, Log, TEXT("normal: %s"), *normal.ToString())
 	if(FireComponents.Num() == 0)
 	{
 		int num1 = FireComponents.Num() + 1;
 		UFireComponent* Component = NewObject<UFireComponent>(this, UFireComponent::StaticClass(), FName(TEXT("Fire%d"), num1));
 		Component->RegisterComponent();
 		Component->SetFireSimulation(this);
-		Component->SetRelativeLocation(fireLocation);
-		UE_LOG(LogTemp, Log, TEXT("%s"), *Component->GetComponentLocation().ToString());
+
+		Component->SetWorldLocation(fireLocation);
+		// Component->SetWorldRotation(normal.Rotation());
+		Component->position = fireLocation;
+		Component->id = num1;
+		VertexStruct->setFireID(num1);
+		// UE_LOG(LogTemp, Log, TEXT("%s"), *Component->GetComponentLocation().ToString());
 		// Component->VertexIds.Add(VertexID);
-		Component->AddVertexToFireComponent(VertexID, fireLocation);
+		Component->AddVertexToFireComponent(FVertexID(VertexStruct->GetVertexID()), fireLocation);
 		
 		Component->EmitterInstances[0]->bEnabled = false;
 		Component->EmitterInstances[1]->bEnabled = false;
 		Component->EmitterInstances[3]->bEnabled = false;
 		Component->EmitterInstances[4]->bEnabled = false;
 		Component->EmitterInstances[5]->bEnabled = false;
-		FireComponents.Add(Component);
+		FireComponents.Add(num1, Component);
 	}
 	else
 	{
-		for (auto __fireComponent : FireComponents)
+		// VertexStruct* vertexStruct = vertexColorSpreadMesh->startedVerticesMap.Find(VertexID.GetValue());
+		if(VertexStruct)
 		{
-			if(__fireComponent->CheckInBoundary(VertexID, fireLocation))
+			int id = VertexStruct->getFireID();
+			if(id != 0)
 			{
-				// 추가만
-				
-				__fireComponent->AddVertexToFireComponent(VertexID, fireLocation);
+				// UFireComponent* fireComponent = *FireComponents.Find(VertexStruct->getFireID());
+				UFireComponent* fireComponent = FireComponents.Find(id) ? *FireComponents.Find(id) : nullptr;
+				if(fireComponent)
+					fireComponent->AddVertexToFireComponent(FVertexID(VertexStruct->GetVertexID()), fireLocation);
 				return;
 			}
+
+			for (auto elem : FireComponents)
+			{
+				if(elem.Value->CheckInBoundary(FVertexID(VertexStruct->GetVertexID()), fireLocation))
+				{
+					elem.Value->AddVertexToFireComponent(FVertexID(VertexStruct->GetVertexID()), fireLocation);
+					VertexStruct->setFireID(elem.Value->id);
+					return;
+				}
+			}
 		}
-		
 		//새로 정의
 		int num1 = FireComponents.Num() + 1;
 		UFireComponent* Component = NewObject<UFireComponent>(this, UFireComponent::StaticClass(), FName(TEXT("Fire%d"), num1));
 		Component->RegisterComponent();
 		Component->SetFireSimulation(this);
-		Component->SetRelativeLocation(fireLocation);
+		Component->SetWorldLocation(fireLocation);
+		
+		// UE_LOG(LogTemp, Log, TEXT("rotation: %s"), *normal.Rotation().ToString());
+		// Component->SetWorldRotation(normal.Rotation());
+		Component->position = fireLocation;
+		Component->id = num1;
+		VertexStruct->setFireID(num1);
 		// Component->VertexIds.Add(VertexID);
-		Component->AddVertexToFireComponent(VertexID, fireLocation);
+		Component->AddVertexToFireComponent(FVertexID(VertexStruct->GetVertexID()), fireLocation);
 		
 		Component->EmitterInstances[0]->bEnabled = false;
 		Component->EmitterInstances[1]->bEnabled = false;
 		Component->EmitterInstances[3]->bEnabled = false;
 		Component->EmitterInstances[4]->bEnabled = false;
 		Component->EmitterInstances[5]->bEnabled = false;
-		FireComponents.Add(Component);
+		FireComponents.Add(num1, Component);
 	}
 }
 
-void UFireSimulation::FindNearestFire(FVector fireLocation, FVertexID VertexID)
+void UFireSimulation::FindNearestFire(FVector fireLocation, VertexStruct* vertexStruct)
 {
-	for (auto __fireComponent : FireComponents)
+	// VertexStruct* vertexStruct = vertexColorSpreadMesh->startedVerticesMap.Find(VertexStruct..GetValue());
+	if(vertexStruct)
 	{
-		if(__fireComponent->VertexIds.Contains(VertexID))
-		{
-			// 추가만
-			// __fireComponent->AddVertexToFireComponent(VertexID, fireLocation);
-			__fireComponent->FireStart();
-			// __fireComponent->AddVertexToFireComponent(VertexID, fireLocation);
-			return;
-		}
+		int id = vertexStruct->getFireID();
+		UE_LOG(LogTemp, Log, TEXT("id: %d"), id);
+		UFireComponent* fireComponent = FireComponents.Find(id) ? *FireComponents.Find(id) : nullptr;
+		if(fireComponent)
+			fireComponent->FireStart();
 	}
 }
 

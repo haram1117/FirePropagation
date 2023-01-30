@@ -3,12 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "FireSimulation.h"
 #include "Components/ActorComponent.h"
+#include "Particles/ParticleModule.h"
 #include "Particles/ParticleSystem.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "FireComponent.generated.h"
 
+class UFireSimulation;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class FIREPROPAGATION_API UFireComponent : public UParticleSystemComponent
@@ -20,11 +21,15 @@ public:
 	UFireComponent();
 	UParticleSystem* ParticleSystem;
 
+	int id;
+	
+	TArray<UParticleModule*> Modules;
+	
 	float fireRate = 1.0f;
 	float smokeRate = 5.0f;
 
 	TArray<FVertexID> VertexIds;
-	FVector centerLocation;
+	FVector position;
 	UFireSimulation* FireSimulation;
 
 	void AddVertexToFireComponent(FVertexID VertexID, FVector newLocation);
