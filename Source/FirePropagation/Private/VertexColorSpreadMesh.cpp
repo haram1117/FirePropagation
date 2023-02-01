@@ -28,7 +28,7 @@ AVertexColorSpreadMesh::AVertexColorSpreadMesh()
 	FirstInit = true;
 	Distance = 10.f;
 	TriggerIntensity = .2f;
-	Interval = 1.0f;
+	Interval = 0.5f;
 	bActive = true;
 	bTimerActive = false;
 }
@@ -47,7 +47,7 @@ void AVertexColorSpreadMesh::Tick(float DeltaTime)
 void AVertexColorSpreadMesh::BeginPlay()
 {
 	Super::BeginPlay();
-	ProcessingVertices.Add(FVertexID(0));
+	ProcessingVertices.Add(FVertexID(161));
 	MeshDescription = ColorSpreadComponent->GetStaticMesh()->GetMeshDescription(0);
 	// Init the buffers and LOD data
 	InitialiseLODInfoAndBuffers();
